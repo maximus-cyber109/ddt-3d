@@ -16,7 +16,7 @@
         <p>Loading 3D Model...</p>
     </div>
 
-    <!-- 3D Canvas Container (Fixed Background) -->
+    <!-- 3D Canvas Container -->
     <div id="canvas-container"></div>
 
     <!-- Hero Section -->
@@ -35,11 +35,6 @@
         <div class="content-text">
             <h3>4K Ultra-HD Imaging</h3>
             <p>Experience pristine clinical imaging with our advanced 1/2.8" CMOS sensor delivering 4K resolution (3264 × 2448 pixels). Every detail is crystal clear for accurate diagnosis and treatment planning.</p>
-            <ul>
-                <li><strong>3264 × 2448</strong> resolution for maximum clarity</li>
-                <li><strong>USB 2.0 Direct Output</strong> for seamless integration</li>
-                <li><strong>105° angle of view</strong> captures comprehensive oral regions</li>
-            </ul>
         </div>
     </section>
 
@@ -47,12 +42,7 @@
     <section class="content-section" data-position="right">
         <div class="content-text">
             <h3>Smart Focus Technology</h3>
-            <p>Revolutionary smart focus system allows manual adjustment for both near (10mm) and far (60mm) distance imaging. Perfect for detailed close-ups or broader scanning with zero calibration hassle.</p>
-            <ul>
-                <li><strong>10-60mm focus range</strong> for versatile imaging</li>
-                <li><strong>Manual fine-tuning</strong> ensures perfect clarity every time</li>
-                <li><strong>Instant focus lock</strong> keeps your target in view</li>
-            </ul>
+            <p>Revolutionary smart focus system allows manual adjustment for both near (10mm) and far (60mm) distance imaging. Perfect for detailed close-ups or broader scanning.</p>
         </div>
     </section>
 
@@ -61,75 +51,27 @@
         <div class="content-text">
             <h3>8 LED Combination Lights</h3>
             <p>Superior illumination system with 8 strategically positioned LED lights ensures optimal visibility in any oral cavity. No external lighting needed—plug, focus, and capture perfect images instantly.</p>
-            <ul>
-                <li><strong>8 integrated LEDs</strong> for shadow-free imaging</li>
-                <li><strong>Consistent illumination</strong> across all oral regions</li>
-                <li><strong>No external power required</strong> - USB powered</li>
-            </ul>
         </div>
     </section>
 
-    <!-- CTA Section with Pricing -->
+    <!-- CTA Section -->
     <section class="cta-section">
-        <div class="discount-badge">44% OFF</div>
         <h2>Ready to Upgrade Your Practice?</h2>
-        <p class="cta-subtitle">Get premium 4K intraoral imaging today</p>
-        
-        <div class="coupon-wrapper">
-            <div class="coupon-label">LIMITED TIME OFFER CODE</div>
-            <div class="coupon-code" id="couponCode">ROLLINS44</div>
-            <button class="copy-btn" id="copyBtn">
-                <span class="copy-text">Copy Code</span>
-                <span class="copied-text">✓ Copied!</span>
-            </button>
+        <div style="font-size: 3rem; font-weight: 800; color: white; margin: 2rem 0;">
+            ₹19,999 <span style="font-size: 1.5rem; opacity: 0.6; text-decoration: line-through;">₹36,000</span>
         </div>
-
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; color: white; text-shadow: 0 2px 20px rgba(0,0,0,0.3);">
-                ₹19,999
-                <span style="font-size: 1.5rem; opacity: 0.7; text-decoration: line-through;">₹36,000</span>
-            </div>
-            <p style="color: #7dd3c0; font-weight: 700; margin-top: 0.5rem;">You save ₹16,001 (44%)</p>
-        </div>
-
-        <button class="shop-btn" onclick="alert('Add to cart functionality - customize as needed')">
-            Add to Cart
-        </button>
-
-        <p style="margin-top: 2rem; opacity: 0.8; font-size: 0.95rem;">Bulk prices available | Buy 2 for ₹18,999 each | Free delivery across India</p>
+        <button class="shop-btn">Add to Cart</button>
     </section>
 
-          <!-- Three.js and loaders from esm.sh (more reliable) -->
-    <script type="importmap">
-    {
-      "imports": {
-        "three": "https://esm.sh/three@r128",
-        "three/addons/": "https://esm.sh/three@r128/examples/jsm/"
-      }
-    }
-    </script>
-
-    <script type="module">
-      import * as THREE from 'three';
-      import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
-      import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-
-      // Make available globally
-      window.THREE = THREE;
-      window.MTLLoader = MTLLoader;
-      window.OBJLoader = OBJLoader;
-
-      // Start the app
-      import('./script.js').then(() => {
-        console.log('✓ All modules loaded successfully');
-      });
-    </script>
-
-    <!-- Other libraries -->
+    <!-- THREE.js Global Scripts -->
+    <script src="https://unpkg.com/three@r128/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@r128/examples/js/loaders/MTLLoader.js"></script>
+    <script src="https://unpkg.com/three@r128/examples/js/loaders/OBJLoader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
     
+    <!-- Your script -->
     <script src="script.js"></script>
 </body>
 </html>
