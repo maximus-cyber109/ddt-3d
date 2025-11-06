@@ -1,228 +1,231 @@
-// Three.js Scene Setup - DDT Rollins Pro Landing Page
-// All libraries loaded before this script executes
+const loadingScreen = document.getElementById('loading-screen');
 
-let scene, camera, renderer, controls;
+// Loading Manager
+const loadingManager = new THREE.LoadingManager();
+loadingManager.onLoad = () => {
+    setTimeout(() => {
+        loadingScreen.classList.add('hidden');
+    }, 500);
+};
+
+loadingManager.onProgress = (url, loaded, total) => {
+    console.log(`Loading: ${Math.round((loaded / total) * 100)}%`);
+};
+
+loadingManager.onError = (url) => {
+    console.error('Error loading:', url);
+    loadingScreen.innerHTML = '<div class="loader"></div><p>Error: Model failed to load</p>';
+};
+
+// Three.js Scene
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+    45,
+    container.clientWidth / container.clientHeight,
+    0.1,
+    1000
+);
+camera.position.set(0, 0, 6);
+
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.3;
+container.appendChild(renderer.domElement);
+
+// Lighting - Premium Setup
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+scene.add(ambientLight);
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+keyLight.position.set(5, 5, 5);
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0x7dd3c0, 0.6);
+fillLight.position.set(-5, 0, -5);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
+rimLight.position.set(0, -5, 3);
+scene.add(rimLight);
+
+// Controls
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 1.5;
+controls.enableZoom = false;
+controls.enablePan = false;
+
+// Load OBJ/MTL Model
+const mtlLoader = new THREE.MTLLoader(loadingManager);
+const objLoader = new THREE.OBJLoader(loadingManager);
 let model;
-let isLoading = true;
 
-function init() {
-    // Verify THREE.js loaded
-    if (typeof THREE === 'undefined') {
-        console.error('THREE.js failed to load');
-        return;
-    }
-
-    // Get canvas and container
-    const canvas = document.getElementById('webgl-canvas');
-    const container = document.getElementById('canvas-container');
-
-    if (!canvas || !container) {
-        console.error('Canvas or container not found in DOM');
-        return;
-    }
-
-    // Scene setup
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000); // Pure black background
-    scene.fog = new THREE.Fog(0x000000, 50, 100);
-
-    // Camera setup - responsive to window size
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+mtlLoader.setPath('models/');
+mtlLoader.load('source.mtl', (materials) => {
+    materials.preload();
     
-    if (width === 0 || height === 0) {
-        console.error('Container has zero dimensions');
-        return;
-    }
-
-    camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.set(0, 0, 80);
-
-    // Renderer setup - High performance
-    renderer = new THREE.WebGLRenderer({ 
-        canvas: canvas,
-        antialias: true, 
-        alpha: true,
-        powerPreference: 'high-performance'
-    });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowShadowMap;
-
-    // Lighting Setup - Realistic 3D rendering
-    // Main key light (front)
-    const keyLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    keyLight.position.set(50, 50, 50);
-    keyLight.castShadow = true;
-    keyLight.shadow.mapSize.width = 2048;
-    keyLight.shadow.mapSize.height = 2048;
-    scene.add(keyLight);
-
-    // Fill light (side)
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
-    fillLight.position.set(-50, 30, 50);
-    scene.add(fillLight);
-
-    // Rim light (back)
-    const rimLight = new THREE.DirectionalLight(0x404040, 0.5);
-    rimLight.position.set(0, 20, -80);
-    scene.add(rimLight);
-
-    // Soft ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-    scene.add(ambientLight);
-
-    // OrbitControls - Smooth camera interaction
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05; // Ultra-smooth
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 2;
-    controls.enableZoom = true;
-    controls.zoomSpeed = 1.2;
-    controls.enablePan = true;
-    controls.panSpeed = 0.8;
-    controls.minDistance = 30;
-    controls.maxDistance = 150;
-    
-    controls.target.set(0, 0, 0);
-    controls.update();
-
-    // Load model
-    loadModel();
-
-    // Handle window resize
-    window.addEventListener('resize', onWindowResize, false);
-
-    // Stop auto-rotate on user interaction
-    renderer.domElement.addEventListener('mousedown', () => {
-        controls.autoRotate = false;
-    });
-
-    renderer.domElement.addEventListener('touchstart', () => {
-        controls.autoRotate = false;
-    });
-
-    // Resume auto-rotate after 5 seconds of inactivity
-    let autoRotateTimeout;
-    function resetAutoRotate() {
-        clearTimeout(autoRotateTimeout);
-        autoRotateTimeout = setTimeout(() => {
-            controls.autoRotate = true;
-        }, 5000);
-    }
-
-    renderer.domElement.addEventListener('mouseup', resetAutoRotate);
-    renderer.domElement.addEventListener('touchend', resetAutoRotate);
-
-    // Start animation loop
-    animate();
-}
-
-// Load OBJ and MTL model
-function loadModel() {
-    const mtlLoader = new THREE.MTLLoader();
-    const objLoader = new THREE.OBJLoader();
-
-    const modelPath = 'models/';
-    
-    mtlLoader.setPath(modelPath);
-    mtlLoader.load('source.mtl', (materials) => {
-        materials.preload();
+    objLoader.setMaterials(materials);
+    objLoader.setPath('models/');
+    objLoader.load('source.obj', (object) => {
+        model = object;
         
-        objLoader.setMaterials(materials);
-        objLoader.setPath(modelPath);
-        objLoader.load('source.obj', (object) => {
-            model = object;
-            
-            setupModel(model);
-            
-            model.position.set(0, 0, 0);
-            model.scale.set(2, 2, 2);
-            
-            scene.add(model);
-            finishLoading();
-        }, 
-        (xhr) => {
-            const percentComplete = (xhr.loaded / xhr.total) * 100;
-            console.log(percentComplete + '% loaded');
-        },
-        (error) => {
-            console.error('Error loading model:', error);
-            finishLoading();
-        });
-    }, undefined, (error) => {
-        console.error('Error loading MTL:', error);
-        finishLoading();
+        // Calculate bounds and center
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        
+        // Center the model
+        model.position.sub(center);
+        
+        // Scale to reasonable size
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const targetSize = 3;
+        const scale = targetSize / maxDim;
+        model.scale.setScalar(scale);
+        
+        // Tilt for dynamic look
+        model.rotation.x = Math.PI / 10;
+        model.rotation.z = -Math.PI / 20;
+        
+        scene.add(model);
+        console.log('✓ Model loaded and scaled');
+        
+        initScrollAnimations();
+    }, 
+    undefined,
+    (error) => {
+        console.error('Model error:', error);
+        loadingScreen.innerHTML = '<div class="loader"></div><p>Error loading model</p>';
     });
-}
+});
 
-// Setup model properties
-function setupModel(model) {
-    model.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            
-            if (child.material) {
-                child.material.side = THREE.DoubleSide;
-                child.material.metalness = 0.3;
-                child.material.roughness = 0.6;
-            }
-        }
-    });
-}
-
-// Finish loading and hide spinner
-function finishLoading() {
-    isLoading = false;
-    const spinner = document.getElementById('loading-spinner');
-    if (spinner) {
-        spinner.style.opacity = '0';
-        spinner.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => {
-            spinner.style.display = 'none';
-        }, 300);
-    }
-}
-
-// Animation loop
+// Animation Loop
 function animate() {
     requestAnimationFrame(animate);
-
-    if (controls) {
-        controls.update();
-    }
-
-    if (renderer && scene && camera) {
-        renderer.render(scene, camera);
-    }
+    controls.update();
+    renderer.render(scene, camera);
 }
 
-// Handle window resize
-function onWindowResize() {
-    const container = document.getElementById('canvas-container');
-    if (!container) return;
+animate();
 
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+// Lenis Smooth Scroll
+let lenis;
+window.addEventListener('load', () => {
+    lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smooth: true,
+    });
 
-    if (width === 0 || height === 0) return;
-
-    if (camera) {
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
+    function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
     }
 
-    if (renderer) {
-        renderer.setSize(width, height);
-    }
+    requestAnimationFrame(raf);
+
+    gsap.registerPlugin(ScrollTrigger);
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+
+    console.log('✓ Lenis ready');
+});
+
+// Scroll Animations
+function initScrollAnimations() {
+    const sections = gsap.utils.toArray('.content-section');
+    
+    sections.forEach((section) => {
+        const position = section.getAttribute('data-position');
+        const isMobile = window.innerWidth < 968;
+        const targetX = isMobile ? 0 : (position === 'left' ? -25 : 25);
+        const rotationY = position === 'left' ? Math.PI / 4 : -Math.PI / 4;
+
+        ScrollTrigger.create({
+            trigger: section,
+            start: 'top center',
+            end: 'bottom center',
+            scrub: 1,
+            onUpdate: (self) => {
+                const progress = self.progress;
+                
+                gsap.to(container, {
+                    x: `${targetX * progress}vw`,
+                    duration: 0.3,
+                });
+                
+                if (model) {
+                    gsap.to(model.rotation, {
+                        y: rotationY * progress,
+                        duration: 0.3,
+                    });
+                }
+            }
+        });
+    });
+
+    // CTA: Return to center
+    ScrollTrigger.create({
+        trigger: '.cta-section',
+        start: 'top center',
+        end: 'center center',
+        scrub: 1,
+        onUpdate: (self) => {
+            const progress = self.progress;
+            
+            gsap.to(container, {
+                x: 0,
+                scale: 1.1,
+                duration: 0.5,
+            });
+            
+            if (model) {
+                gsap.to(model.rotation, {
+                    y: Math.PI * 2 * progress,
+                    duration: 0.5,
+                });
+            }
+            
+            controls.autoRotate = true;
+        }
+    });
+
+    console.log('✓ Scroll animations initialized');
 }
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
+// Copy Coupon
+const copyBtn = document.getElementById('copyBtn');
+const couponCode = document.getElementById('couponCode');
+
+if (copyBtn && couponCode) {
+    copyBtn.addEventListener('click', () => {
+        const code = couponCode.textContent;
+        navigator.clipboard.writeText(code).then(() => {
+            copyBtn.classList.add('copied');
+            setTimeout(() => copyBtn.classList.remove('copied'), 2500);
+        }).catch(() => {
+            const textArea = document.createElement('textarea');
+            textArea.value = code;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            copyBtn.classList.add('copied');
+            setTimeout(() => copyBtn.classList.remove('copied'), 2500);
+        });
+    });
 }
+
+// Resize Handler
+window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    ScrollTrigger.refresh();
+});
