@@ -77,8 +77,7 @@ controls.maxDistance = 15;
 const loader = new GLTFLoader(loadingManager);
 let model;
 
-loader.load(
-    './models/camera.glb',
+loader.load('models/camera.glb',
     (gltf) => {
         model = gltf.scene;
         
