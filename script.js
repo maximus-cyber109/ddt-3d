@@ -1,122 +1,154 @@
-const loadingScreen = document.getElementById('loading-screen');
+// Wait for all Three.js libraries to load
+function initScene() {
+    // Verify all libraries are loaded
+    if (typeof THREE === 'undefined') {
+        console.error('THREE.js not loaded');
+        return setTimeout(initScene, 100);
+    }
+    if (typeof THREE.OrbitControls === 'undefined') {
+        console.error('OrbitControls not loaded');
+        return setTimeout(initScene, 100);
+    }
 
-// Loading Manager
-const loadingManager = new THREE.LoadingManager();
-loadingManager.onLoad = () => {
-    setTimeout(() => {
-        loadingScreen.classList.add('hidden');
-    }, 500);
-};
-
-loadingManager.onProgress = (url, loaded, total) => {
-    console.log(`Loading: ${Math.round((loaded / total) * 100)}%`);
-};
-
-loadingManager.onError = (url) => {
-    console.error('Error loading:', url);
-    loadingScreen.innerHTML = '<div class="loader"></div><p>Error: Model failed to load</p>';
-};
-
-// Three.js Scene
-const container = document.getElementById('canvas-container');
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-    45,
-    container.clientWidth / container.clientHeight,
-    0.1,
-    1000
-);
-camera.position.set(0, 0, 6);
-
-const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.3;
-container.appendChild(renderer.domElement);
-
-// Lighting - Premium Setup
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-scene.add(ambientLight);
-
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
-keyLight.position.set(5, 5, 5);
-scene.add(keyLight);
-
-const fillLight = new THREE.DirectionalLight(0x7dd3c0, 0.6);
-fillLight.position.set(-5, 0, -5);
-scene.add(fillLight);
-
-const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
-rimLight.position.set(0, -5, 3);
-scene.add(rimLight);
-
-// Controls
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 1.5;
-controls.enableZoom = false;
-controls.enablePan = false;
-
-// Load OBJ/MTL Model
-const mtlLoader = new THREE.MTLLoader(loadingManager);
-const objLoader = new THREE.OBJLoader(loadingManager);
-let model;
-
-mtlLoader.setPath('models/');
-mtlLoader.load('source.mtl', (materials) => {
-    materials.preload();
-    
-    objLoader.setMaterials(materials);
-    objLoader.setPath('models/');
-    objLoader.load('source.obj', (object) => {
-        model = object;
-        
-        // Calculate bounds and center
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        
-        // Center the model
-        model.position.sub(center);
-        
-        // Scale to reasonable size
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const targetSize = 3;
-        const scale = targetSize / maxDim;
-        model.scale.setScalar(scale);
-        
-        // Tilt for dynamic look
-        model.rotation.x = Math.PI / 10;
-        model.rotation.z = -Math.PI / 20;
-        
-        scene.add(model);
-        console.log('✓ Model loaded and scaled');
-        
-        initScrollAnimations();
-    }, 
-    undefined,
-    (error) => {
-        console.error('Model error:', error);
-        loadingScreen.innerHTML = '<div class="loader"></div><p>Error loading model</p>';
-    });
-});
-
-// Animation Loop
-function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
+    console.log('✓ All libraries loaded');
+    createScene();
 }
 
-animate();
+function createScene() {
+    const loadingScreen = document.getElementById('loading-screen');
+
+    // Loading Manager
+    const loadingManager = new THREE.LoadingManager();
+    loadingManager.onLoad = () => {
+        setTimeout(() => {
+            loadingScreen.classList.add('hidden');
+        }, 500);
+    };
+
+    loadingManager.onProgress = (url, loaded, total) => {
+        console.log(`Loading: ${Math.round((loaded / total) * 100)}%`);
+    };
+
+    loadingManager.onError = (url) => {
+        console.error('Error loading:', url);
+        loadingScreen.innerHTML = '<div class="loader"></div><p>Error: Model failed to load</p>';
+    };
+
+    // Three.js Scene
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+        45,
+        container.clientWidth / container.clientHeight,
+        0.1,
+        1000
+    );
+    camera.position.set(0, 0, 6);
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.3;
+    container.appendChild(renderer.domElement);
+
+    // Lighting - Premium Setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+    keyLight.position.set(5, 5, 5);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x7dd3c0, 0.6);
+    fillLight.position.set(-5, 0, -5);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    rimLight.position.set(0, -5, 3);
+    scene.add(rimLight);
+
+    // Controls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.5;
+    controls.enableZoom = false;
+    controls.enablePan = false;
+
+    // Load OBJ/MTL Model
+    const mtlLoader = new THREE.MTLLoader(loadingManager);
+    const objLoader = new THREE.OBJLoader(loadingManager);
+    let model;
+
+    mtlLoader.setPath('models/');
+    mtlLoader.load('source.mtl', (materials) => {
+        materials.preload();
+        
+        objLoader.setMaterials(materials);
+        objLoader.setPath('models/');
+        objLoader.load('source.obj', (object) => {
+            model = object;
+            
+            // Calculate bounds and center
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            
+            // Center the model
+            model.position.sub(center);
+            
+            // Scale to reasonable size
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const targetSize = 3;
+            const scale = targetSize / maxDim;
+            model.scale.setScalar(scale);
+            
+            // Tilt for dynamic look
+            model.rotation.x = Math.PI / 10;
+            model.rotation.z = -Math.PI / 20;
+            
+            scene.add(model);
+            console.log('✓ Model loaded and scaled');
+            
+            initScrollAnimations(scene, model, container, controls);
+        }, 
+        undefined,
+        (error) => {
+            console.error('Model error:', error);
+            loadingScreen.innerHTML = '<div class="loader"></div><p>Error loading model</p>';
+        });
+    }, undefined, (error) => {
+        console.error('MTL error:', error);
+    });
+
+    // Animation Loop
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        ScrollTrigger.refresh();
+    });
+}
 
 // Lenis Smooth Scroll
-let lenis;
-window.addEventListener('load', () => {
-    lenis = new Lenis({
+function initLenis() {
+    if (typeof Lenis === 'undefined') {
+        console.error('Lenis not loaded');
+        return setTimeout(initLenis, 100);
+    }
+
+    const lenis = new Lenis({
         duration: 1.2,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         smooth: true,
@@ -135,10 +167,15 @@ window.addEventListener('load', () => {
     gsap.ticker.lagSmoothing(0);
 
     console.log('✓ Lenis ready');
-});
+}
 
 // Scroll Animations
-function initScrollAnimations() {
+function initScrollAnimations(scene, model, container, controls) {
+    if (typeof gsap === 'undefined' || typeof Lenis === 'undefined') {
+        console.warn('GSAP or Lenis not ready, retrying...');
+        return setTimeout(() => initScrollAnimations(scene, model, container, controls), 100);
+    }
+
     const sections = gsap.utils.toArray('.content-section');
     
     sections.forEach((section) => {
@@ -200,32 +237,41 @@ function initScrollAnimations() {
 }
 
 // Copy Coupon
-const copyBtn = document.getElementById('copyBtn');
-const couponCode = document.getElementById('couponCode');
+function initCoupon() {
+    const copyBtn = document.getElementById('copyBtn');
+    const couponCode = document.getElementById('couponCode');
 
-if (copyBtn && couponCode) {
-    copyBtn.addEventListener('click', () => {
-        const code = couponCode.textContent;
-        navigator.clipboard.writeText(code).then(() => {
-            copyBtn.classList.add('copied');
-            setTimeout(() => copyBtn.classList.remove('copied'), 2500);
-        }).catch(() => {
-            const textArea = document.createElement('textarea');
-            textArea.value = code;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            copyBtn.classList.add('copied');
-            setTimeout(() => copyBtn.classList.remove('copied'), 2500);
+    if (copyBtn && couponCode) {
+        copyBtn.addEventListener('click', () => {
+            const code = couponCode.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                copyBtn.classList.add('copied');
+                setTimeout(() => copyBtn.classList.remove('copied'), 2500);
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                copyBtn.classList.add('copied');
+                setTimeout(() => copyBtn.classList.remove('copied'), 2500);
+            });
         });
-    });
+    }
 }
 
-// Resize Handler
-window.addEventListener('resize', () => {
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    ScrollTrigger.refresh();
-});
+// Master init function
+function masterInit() {
+    console.log('Starting initialization...');
+    initCoupon();
+    initLenis();
+    initScene();
+}
+
+// Wait for DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', masterInit);
+} else {
+    masterInit();
+}
