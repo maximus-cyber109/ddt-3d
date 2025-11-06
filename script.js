@@ -19,13 +19,13 @@ loadingManager.onProgress = (url, loaded, total) => {
 
 loadingManager.onError = (url) => {
     console.error('Error loading:', url);
-    loadingScreen.innerHTML = '<p>Error: Check if camera.glb exists</p>';
+    loadingScreen.innerHTML = '<p>Error loading model</p>';
 };
 
 // Three.js Scene
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000); // Black background
+scene.background = new THREE.Color(0x000000);
 
 const camera = new THREE.PerspectiveCamera(
     45,
@@ -45,57 +45,51 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.3;
 container.appendChild(renderer.domElement);
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+// Lighting - Premium
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
 scene.add(ambientLight);
 
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
-keyLight.position.set(5, 5, 5);
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
+keyLight.position.set(8, 6, 8);
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0xcccccc, 0.8);
-fillLight.position.set(-5, 0, -5);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+fillLight.position.set(-8, 3, -8);
 scene.add(fillLight);
 
-const rimLight = new THREE.DirectionalLight(0xffffff, 0.6);
-rimLight.position.set(0, -5, 3);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
+rimLight.position.set(0, -8, 4);
 scene.add(rimLight);
 
-// Controls - MOUSE ROTATION ENABLED
+// Controls - ROTATION ONLY (no zoom, no pan)
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.05;
+controls.dampingFactor = 0.08;
 controls.autoRotate = true;
-controls.autoRotateSpeed = 1.5;
-controls.enableZoom = true;
-controls.zoomSpeed = 1.2;
-controls.enablePan = true;
-controls.minDistance = 2;
-controls.maxDistance = 15;
+controls.autoRotateSpeed = 2;
+controls.enableZoom = false;    // NO ZOOM
+controls.enablePan = false;     // NO PAN
+controls.enableRotate = true;   // YES ROTATION
 
-// Load Model - GLB Format
+// Load Model
 const loader = new GLTFLoader(loadingManager);
 let model;
 
-loader.load('./models/Source.glb',
+loader.load(
+    './models/source.glb',
     (gltf) => {
         model = gltf.scene;
         
-        // Calculate bounds and center
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         
-        // Center the model
         model.position.sub(center);
         
-        // Scale to reasonable size
         const maxDim = Math.max(size.x, size.y, size.z);
-        const targetSize = 3;
-        const scale = targetSize / maxDim;
+        const scale = 3 / maxDim;
         model.scale.setScalar(scale);
         
-        // Tilt for dynamic look
         model.rotation.x = Math.PI / 10;
         model.rotation.z = -Math.PI / 20;
         
@@ -104,11 +98,11 @@ loader.load('./models/Source.glb',
     },
     (progress) => {
         if (progress.total > 0) {
-            console.log(`Model: ${Math.round((progress.loaded / progress.total) * 100)}%`);
+            console.log(`Loading: ${Math.round((progress.loaded / progress.total) * 100)}%`);
         }
     },
     (error) => {
-        console.error('Model error:', error);
+        console.error('Error:', error);
     }
 );
 
@@ -116,7 +110,6 @@ loader.load('./models/Source.glb',
 function animate() {
     requestAnimationFrame(animate);
     
-    // Pause auto-rotate when user is dragging
     if (controls.isUserInteracting) {
         controls.autoRotate = false;
     }
@@ -126,20 +119,13 @@ function animate() {
 }
 animate();
 
-// Resume auto-rotate after user stops dragging
-let rotateTimeout;
-document.addEventListener('mouseup', () => {
-    clearTimeout(rotateTimeout);
-    rotateTimeout = setTimeout(() => {
-        controls.autoRotate = true;
-    }, 3000); // Resume after 3 seconds of inactivity
-});
-
+// Resume auto-rotate on mobile after touch
+let touchTimeout;
 document.addEventListener('touchend', () => {
-    clearTimeout(rotateTimeout);
-    rotateTimeout = setTimeout(() => {
+    clearTimeout(touchTimeout);
+    touchTimeout = setTimeout(() => {
         controls.autoRotate = true;
-    }, 3000);
+    }, 2000);
 });
 
 // Copy Coupon
@@ -149,7 +135,6 @@ const couponCode = document.getElementById('couponCode');
 if (copyBtn && couponCode) {
     copyBtn.addEventListener('click', () => {
         const code = couponCode.textContent;
-        
         navigator.clipboard.writeText(code).then(() => {
             copyBtn.classList.add('copied');
             setTimeout(() => copyBtn.classList.remove('copied'), 2500);
@@ -160,7 +145,6 @@ if (copyBtn && couponCode) {
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            
             copyBtn.classList.add('copied');
             setTimeout(() => copyBtn.classList.remove('copied'), 2500);
         });
@@ -173,3 +157,5 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
 });
+
+console.log('✓ Script ready');
