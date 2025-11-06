@@ -109,18 +109,28 @@ body {
 }
 
 /* 3D Canvas */
+/* 3D Canvas - NOT STUCK */
 #canvas-container {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: clamp(350px, 50vw, 700px);
-    height: clamp(350px, 50vh, 700px);
-    z-index: 5;
-    pointer-events: auto;
+    position: relative;
+    width: 100%;
+    max-width: 650px;
+    aspect-ratio: 1;
+    margin: 0 auto 2rem auto;  /* CENTER IT */
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 0 60px rgba(255, 255, 255, 0.1);
+    background: var(--gray-900);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    z-index: 5;
+    pointer-events: all;  /* Allow interaction */
+}
+
+@media (max-width: 640px) {
+    #canvas-container {
+        max-width: 100%;
+        margin: 0 auto 1.5rem auto;
+        border-radius: 16px;
+    }
 }
 
 .scroll-hint {
