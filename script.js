@@ -13,6 +13,18 @@ function init3DScene() {
         return;
     }
 
+    // Verify libraries loaded
+    if (!window.THREE) {
+        console.error('THREE not available');
+        return;
+    }
+
+    const THREE = window.THREE;
+    const MTLLoader = window.MTLLoader;
+    const OBJLoader = window.OBJLoader;
+
+    console.log('✓ THREE.js libraries ready');
+
     // Three.js Scene Setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -48,7 +60,7 @@ function init3DScene() {
     rimLight.position.set(0, -5, 3);
     scene.add(rimLight);
 
-    // Simple Auto-Rotate (No OrbitControls needed)
+    // Simple Auto-Rotate
     let model;
     let autoRotateSpeed = 0.015;
 
@@ -63,20 +75,22 @@ function init3DScene() {
 
     loadingManager.onError = (url) => {
         console.error('Error loading:', url);
-        loadingScreen.innerHTML = '<div class="loader"></div><p>Error loading model</p>';
+        loadingScreen.innerHTML = '<div class="loader"></div><p>Error loading model. Check paths.</p>';
     };
 
     // Load OBJ/MTL Model
-    const mtlLoader = new THREE.MTLLoader(loadingManager);
-    const objLoader = new THREE.OBJLoader(loadingManager);
+    const mtlLoader = new MTLLoader(loadingManager);
+    const objLoader = new OBJLoader(loadingManager);
 
     mtlLoader.setPath('models/');
     mtlLoader.load('source.mtl', (materials) => {
+        console.log('✓ MTL loaded');
         materials.preload();
         
         objLoader.setMaterials(materials);
         objLoader.setPath('models/');
         objLoader.load('source.obj', (object) => {
+            console.log('✓ OBJ loaded');
             model = object;
 
             // Calculate bounds and center
@@ -101,9 +115,11 @@ function init3DScene() {
         undefined,
         (error) => {
             console.error('OBJ loading error:', error);
+            loadingScreen.innerHTML = '<div class="loader"></div><p>Error: Check models/source.obj</p>';
         });
     }, undefined, (error) => {
         console.error('MTL loading error:', error);
+        loadingScreen.innerHTML = '<div class="loader"></div><p>Error: Check models/source.mtl</p>';
     });
 
     // Animation Loop - Simple auto-rotate
