@@ -5,12 +5,11 @@
 }
 
 :root {
-    --cyan: #7dd3c0;
-    --blue: #78c4d4;
-    --purple: #667eea;
-    --gradient: linear-gradient(135deg, #7dd3c0 0%, #78c4d4 50%, #667eea 100%);
-    --text-gradient: linear-gradient(135deg, #ffffff 0%, #e0f7ff 100%);
-    --text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+    --black: #000000;
+    --white: #ffffff;
+    --gray-dark: #1a1a1a;
+    --gray-light: #f5f5f5;
+    --gray-medium: #808080;
 }
 
 html {
@@ -19,9 +18,8 @@ html {
 
 body {
     font-family: 'Space Grotesk', sans-serif;
-    background: var(--gradient);
-    background-attachment: fixed;
-    color: #ffffff;
+    background: var(--black);
+    color: var(--white);
     overflow-x: hidden;
 }
 
@@ -32,7 +30,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: #000;
+    background: var(--black);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -49,8 +47,8 @@ body {
 .loader {
     width: 50px;
     height: 50px;
-    border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--cyan);
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--white);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -62,7 +60,7 @@ body {
 #loading-screen p {
     margin-top: 1rem;
     font-size: 0.9rem;
-    color: var(--cyan);
+    color: var(--gray-medium);
 }
 
 /* Hero */
@@ -76,6 +74,7 @@ body {
     padding: 2rem;
     position: relative;
     z-index: 10;
+    background: var(--black);
 }
 
 .brand {
@@ -83,9 +82,10 @@ body {
     font-weight: 300;
     letter-spacing: 10px;
     margin-bottom: 0.5rem;
-    text-shadow: var(--text-shadow);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     position: relative;
     z-index: 10;
+    color: var(--gray-medium);
 }
 
 .product-name {
@@ -94,12 +94,7 @@ body {
     letter-spacing: -3px;
     line-height: 0.9;
     margin-bottom: 1rem;
-    background: var(--text-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: none;
-    filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
+    color: var(--white);
     position: relative;
     z-index: 10;
 }
@@ -108,12 +103,12 @@ body {
     font-size: clamp(1rem, 2vw, 1.6rem);
     font-weight: 300;
     margin-bottom: 3rem;
-    text-shadow: var(--text-shadow);
+    color: var(--gray-medium);
     position: relative;
     z-index: 10;
 }
 
-/* 3D Canvas - PROPER SIZE & BEHIND TEXT */
+/* 3D Canvas */
 #canvas-container {
     position: fixed;
     top: 50%;
@@ -122,7 +117,10 @@ body {
     width: clamp(350px, 50vw, 700px);
     height: clamp(350px, 50vh, 700px);
     z-index: 5;
-    pointer-events: none;
+    pointer-events: auto;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(255, 255, 255, 0.1);
 }
 
 .scroll-hint {
@@ -134,8 +132,8 @@ body {
     gap: 0.5rem;
     opacity: 0.7;
     animation: bounce 2s infinite;
-    text-shadow: var(--text-shadow);
     z-index: 10;
+    color: var(--gray-medium);
 }
 
 @keyframes bounce {
@@ -151,6 +149,7 @@ body {
     padding: 4rem clamp(1.5rem, 5vw, 6rem);
     position: relative;
     z-index: 10;
+    background: linear-gradient(180deg, var(--black) 0%, var(--gray-dark) 100%);
 }
 
 .content-section[data-position="left"] {
@@ -164,7 +163,7 @@ body {
 .content-text {
     max-width: 600px;
     padding: 0;
-    color: #ffffff;
+    color: var(--white);
     position: relative;
     z-index: 10;
 }
@@ -173,18 +172,14 @@ body {
     font-size: clamp(2rem, 4vw, 3rem);
     margin-bottom: 1.5rem;
     font-weight: 700;
-    background: var(--text-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.3));
+    color: var(--white);
 }
 
 .content-text p {
     font-size: clamp(1rem, 1.8vw, 1.2rem);
     line-height: 1.8;
     margin-bottom: 1.5rem;
-    text-shadow: var(--text-shadow);
+    color: var(--gray-light);
     font-weight: 400;
 }
 
@@ -197,11 +192,12 @@ body {
 .content-text li {
     font-size: clamp(1rem, 1.8vw, 1.2rem);
     margin-bottom: 1rem;
-    text-shadow: var(--text-shadow);
+    color: var(--gray-light);
 }
 
 .content-text strong {
     font-weight: 700;
+    color: var(--white);
 }
 
 /* CTA Section */
@@ -215,19 +211,20 @@ body {
     padding: 4rem 2rem;
     position: relative;
     z-index: 10;
+    background: var(--gray-dark);
 }
 
 .discount-badge {
     position: absolute;
     top: 15%;
     right: 8%;
-    background: rgba(255, 255, 255, 0.95);
-    color: #667eea;
+    background: var(--white);
+    color: var(--black);
     padding: 1.2rem 2.5rem;
     border-radius: 50px;
     font-weight: 800;
     font-size: clamp(1.2rem, 2vw, 1.8rem);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 40px rgba(255, 255, 255, 0.2);
     animation: pulse 2s infinite;
     z-index: 15;
 }
@@ -241,22 +238,18 @@ body {
     font-size: clamp(2.5rem, 5vw, 4.5rem);
     margin-bottom: 1rem;
     font-weight: 700;
-    background: var(--text-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 2px 15px rgba(0, 0, 0, 0.3));
+    color: var(--white);
 }
 
 .cta-subtitle {
     font-size: clamp(1.1rem, 2vw, 1.5rem);
     margin-bottom: 3rem;
-    text-shadow: var(--text-shadow);
+    color: var(--gray-medium);
 }
 
 .coupon-wrapper {
-    background: rgba(255, 255, 255, 0.95);
-    color: #1a1a1a;
+    background: var(--white);
+    color: var(--black);
     padding: 2.5rem 3rem;
     border-radius: 25px;
     margin-bottom: 2rem;
@@ -271,6 +264,7 @@ body {
     letter-spacing: 2px;
     opacity: 0.6;
     margin-bottom: 1rem;
+    color: var(--black);
 }
 
 .coupon-code {
@@ -278,16 +272,17 @@ body {
     font-weight: 800;
     letter-spacing: 5px;
     padding: 1rem 2rem;
-    background: #f3f4f6;
-    border: 3px dashed #667eea;
+    background: var(--gray-light);
+    border: 3px dashed var(--black);
     border-radius: 15px;
     margin-bottom: 1.5rem;
     user-select: all;
+    color: var(--black);
 }
 
 .copy-btn {
-    background: #667eea;
-    color: white;
+    background: var(--black);
+    color: var(--white);
     border: none;
     padding: 1rem 2.5rem;
     font-size: 1.1rem;
@@ -295,13 +290,13 @@ body {
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 5px 20px rgba(102, 110, 234, 0.4);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
 }
 
 .copy-btn:hover {
-    background: #4f46e5;
+    background: var(--gray-medium);
     transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(102, 110, 234, 0.6);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
 }
 
 .copy-btn.copied {
@@ -321,15 +316,15 @@ body {
 }
 
 .shop-btn {
-    background: rgba(255, 255, 255, 0.95);
-    color: #667eea;
+    background: var(--white);
+    color: var(--black);
     border: none;
     padding: 1.5rem 4rem;
     font-size: clamp(1.2rem, 2vw, 1.5rem);
     font-weight: 800;
     border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 15px 50px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 15px 50px rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
     position: relative;
     z-index: 15;
@@ -337,10 +332,11 @@ body {
 
 .shop-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 20px 60px rgba(255, 255, 255, 0.4);
+    box-shadow: 0 20px 60px rgba(255, 255, 255, 0.3);
+    background: var(--gray-light);
 }
 
-/* Mobile Optimization */
+/* Mobile */
 @media (max-width: 968px) {
     .hero {
         padding: 1.5rem;
@@ -371,11 +367,6 @@ body {
     
     .content-text h3 {
         font-size: 2rem;
-    }
-    
-    .content-text p,
-    .content-text li {
-        font-size: 1rem;
     }
     
     .discount-badge {
