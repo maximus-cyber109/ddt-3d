@@ -19,12 +19,13 @@ loadingManager.onProgress = (url, loaded, total) => {
 
 loadingManager.onError = (url) => {
     console.error('Error loading:', url);
-    loadingScreen.innerHTML = '<p>Error: Check if camera.glb exists in models/ folder</p>';
+    loadingScreen.innerHTML = '<p>Error: Check if camera.glb exists</p>';
 };
 
 // Three.js Scene
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000); // Black background
 
 const camera = new THREE.PerspectiveCamera(
     45,
@@ -42,7 +43,6 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.3;
-renderer.outputEncoding = THREE.sRGBEncoding;
 container.appendChild(renderer.domElement);
 
 // Lighting
@@ -53,22 +53,25 @@ const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
 keyLight.position.set(5, 5, 5);
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0x7dd3c0, 0.6);
+const fillLight = new THREE.DirectionalLight(0xcccccc, 0.8);
 fillLight.position.set(-5, 0, -5);
 scene.add(fillLight);
 
-const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.6);
 rimLight.position.set(0, -5, 3);
 scene.add(rimLight);
 
-// Controls
+// Controls - MOUSE ROTATION ENABLED
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 1.5;
-controls.enableZoom = false;
-controls.enablePan = false;
+controls.enableZoom = true;
+controls.zoomSpeed = 1.2;
+controls.enablePan = true;
+controls.minDistance = 2;
+controls.maxDistance = 15;
 
 // Load Model - GLB Format
 const loader = new GLTFLoader(loadingManager);
@@ -98,11 +101,7 @@ loader.load(
         model.rotation.z = -Math.PI / 20;
         
         scene.add(model);
-        console.log('✓ Model loaded and scaled');
-        console.log('Model dimensions:', size);
-        console.log('Scale factor:', scale);
-        
-        initScrollAnimations();
+        console.log('✓ Model loaded');
     },
     (progress) => {
         if (progress.total > 0) {
@@ -111,132 +110,67 @@ loader.load(
     },
     (error) => {
         console.error('Model error:', error);
-        loadingScreen.innerHTML = '<p>Model failed to load. Ensure camera.glb is in models/ folder</p>';
     }
 );
 
 // Animation Loop
 function animate() {
     requestAnimationFrame(animate);
+    
+    // Pause auto-rotate when user is dragging
+    if (controls.isUserInteracting) {
+        controls.autoRotate = false;
+    }
+    
     controls.update();
     renderer.render(scene, camera);
 }
 animate();
 
-// Lenis Smooth Scroll
-let lenis;
-
-window.addEventListener('load', () => {
-    lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smooth: true,
-    });
-
-    function raf(time) {
-        lenis.raf(time);
-        requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-
-    gsap.registerPlugin(ScrollTrigger);
-    lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add((time) => lenis.raf(time * 1000));
-    gsap.ticker.lagSmoothing(0);
-    
-    console.log('✓ Lenis ready');
+// Resume auto-rotate after user stops dragging
+let rotateTimeout;
+document.addEventListener('mouseup', () => {
+    clearTimeout(rotateTimeout);
+    rotateTimeout = setTimeout(() => {
+        controls.autoRotate = true;
+    }, 3000); // Resume after 3 seconds of inactivity
 });
 
-// Scroll Animations
-function initScrollAnimations() {
-    const sections = gsap.utils.toArray('.content-section');
-    
-    sections.forEach((section) => {
-        const position = section.getAttribute('data-position');
-        
-        const isMobile = window.innerWidth < 968;
-        const targetX = isMobile ? 0 : (position === 'left' ? -25 : 25);
-        const rotationY = position === 'left' ? Math.PI / 4 : -Math.PI / 4;
-        
-        ScrollTrigger.create({
-            trigger: section,
-            start: 'top center',
-            end: 'bottom center',
-            scrub: 1,
-            onUpdate: (self) => {
-                const progress = self.progress;
-                
-                gsap.to(container, {
-                    x: `${targetX * progress}vw`,
-                    duration: 0.3,
-                });
-                
-                if (model) {
-                    gsap.to(model.rotation, {
-                        y: rotationY * progress,
-                        duration: 0.3,
-                    });
-                }
-            }
-        });
-    });
-    
-    // CTA: Return to center
-    ScrollTrigger.create({
-        trigger: '.cta-section',
-        start: 'top center',
-        end: 'center center',
-        scrub: 1,
-        onUpdate: (self) => {
-            const progress = self.progress;
-            
-            gsap.to(container, {
-                x: 0,
-                scale: 1.1,
-                duration: 0.5,
-            });
-            
-            if (model) {
-                gsap.to(model.rotation, {
-                    y: Math.PI * 2 * progress,
-                    duration: 0.5,
-                });
-            }
-            
-            controls.autoRotate = true;
-        }
-    });
-    
-    console.log('✓ Scroll animations initialized');
-}
+document.addEventListener('touchend', () => {
+    clearTimeout(rotateTimeout);
+    rotateTimeout = setTimeout(() => {
+        controls.autoRotate = true;
+    }, 3000);
+});
 
 // Copy Coupon
 const copyBtn = document.getElementById('copyBtn');
 const couponCode = document.getElementById('couponCode');
 
-copyBtn.addEventListener('click', () => {
-    const code = couponCode.textContent;
-    
-    navigator.clipboard.writeText(code).then(() => {
-        copyBtn.classList.add('copied');
-        setTimeout(() => copyBtn.classList.remove('copied'), 2500);
-    }).catch(() => {
-        const textArea = document.createElement('textarea');
-        textArea.value = code;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
+if (copyBtn && couponCode) {
+    copyBtn.addEventListener('click', () => {
+        const code = couponCode.textContent;
         
-        copyBtn.classList.add('copied');
-        setTimeout(() => copyBtn.classList.remove('copied'), 2500);
+        navigator.clipboard.writeText(code).then(() => {
+            copyBtn.classList.add('copied');
+            setTimeout(() => copyBtn.classList.remove('copied'), 2500);
+        }).catch(() => {
+            const textArea = document.createElement('textarea');
+            textArea.value = code;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            copyBtn.classList.add('copied');
+            setTimeout(() => copyBtn.classList.remove('copied'), 2500);
+        });
     });
-});
+}
 
 // Resize Handler
 window.addEventListener('resize', () => {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
-    ScrollTrigger.refresh();
 });
