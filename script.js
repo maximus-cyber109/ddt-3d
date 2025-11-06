@@ -1,148 +1,221 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DDT Rollins Pro Smart Focus 4K Intra Oral Camera</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <!-- Hero Section with 3D Viewer -->
-    <section class="hero">
-        <div class="hero-container">
-            <div class="hero-left">
-                <h1>DDT Rollins Pro Smart Focus 4K</h1>
-                <p class="subtitle">Ultra-HD Clinical Imaging for Modern Dental Practice</p>
-                
-                <div class="features-grid">
-                    <div class="feature">
-                        <span class="feature-icon">📹</span>
-                        <div>
-                            <h3>4K Ultra-HD</h3>
-                            <p>1/2.8" CMOS Sensor</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <span class="feature-icon">💡</span>
-                        <div>
-                            <h3>8 LED Lights</h3>
-                            <p>Superior Illumination</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <span class="feature-icon">🔧</span>
-                        <div>
-                            <h3>Smart Focus</h3>
-                            <p>Manual Near & Far</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <span class="feature-icon">⚡</span>
-                        <div>
-                            <h3>Plug & Play</h3>
-                            <p>USB 2.0 Direct Connect</p>
-                        </div>
-                    </div>
-                </div>
+// Three.js Scene Setup - Single OBJ Model with 2 Rotating Cameras
+// Production-ready code optimized for your exact file structure
 
-                <div class="pricing-box">
-                    <div class="price">
-                        <span class="original">₹36,000</span>
-                        <span class="current">₹19,999</span>
-                    </div>
-                    <p class="save">You Save ₹16,001 (44%)</p>
-                    <button class="btn-primary">Add to Cart</button>
-                    <p class="bulk-text">Bulk prices available | Buy 2 for ₹18,999 each</p>
-                </div>
-            </div>
+let scene, camera, renderer, controls;
+let model;
+let isLoading = true;
 
-            <!-- 3D Viewer Canvas -->
-            <div class="hero-right">
-                <div id="canvas-container">
-                    <canvas id="webgl-canvas"></canvas>
-                    <div class="loading-spinner" id="loading-spinner">
-                        <div class="spinner"></div>
-                        <p>Loading 3D Model...</p>
-                    </div>
-                </div>
-                <div class="canvas-controls">
-                    <p>🖱️ Drag to rotate • Scroll to zoom</p>
-                </div>
-            </div>
-        </div>
-    </section>
+function init() {
+    // Get canvas and container
+    const canvas = document.getElementById('webgl-canvas');
+    const container = document.getElementById('canvas-container');
 
-    <!-- Specifications Section -->
-    <section class="specs">
-        <div class="container">
-            <h2>Technical Specifications</h2>
-            <div class="specs-grid">
-                <div class="spec-item">
-                    <h4>Sensor</h4>
-                    <p>1/2.8" CMOS</p>
-                </div>
-                <div class="spec-item">
-                    <h4>Resolution</h4>
-                    <p>4K (3264 × 2448)</p>
-                </div>
-                <div class="spec-item">
-                    <h4>Output</h4>
-                    <p>USB 2.0</p>
-                </div>
-                <div class="spec-item">
-                    <h4>Light Source</h4>
-                    <p>8 LED Combination</p>
-                </div>
-                <div class="spec-item">
-                    <h4>Focus Distance</h4>
-                    <p>10-60 mm</p>
-                </div>
-                <div class="spec-item">
-                    <h4>Angle of View</h4>
-                    <p>105°</p>
-                </div>
-                <div class="spec-item">
-                    <h4>Cable Length</h4>
-                    <p>2.8 m</p>
-                </div>
-                <div class="spec-item">
-                    <h4>Power</h4>
-                    <p>5V via USB</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    // Scene setup
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000); // Pure black background
+    scene.fog = new THREE.Fog(0x000000, 50, 100);
 
-    <!-- Benefits Section -->
-    <section class="benefits">
-        <div class="container">
-            <h2>Why Choose DDT Rollins Pro?</h2>
-            <div class="benefits-grid">
-                <div class="benefit-card">
-                    <h3>High-Definition Imaging</h3>
-                    <p>Delivers ultra-HD 4K intraoral visuals for precise diagnosis and treatment planning.</p>
-                </div>
-                <div class="benefit-card">
-                    <h3>Enhanced Patient Engagement</h3>
-                    <p>Crystal-clear images improve patient communication and treatment acceptance.</p>
-                </div>
-                <div class="benefit-card">
-                    <h3>Plug & Play Installation</h3>
-                    <p>USB 2.0 connectivity ensures easy setup without external power requirements.</p>
-                </div>
-                <div class="benefit-card">
-                    <h3>Smart Focus Technology</h3>
-                    <p>Manual near and far focusing for versatile imaging in any clinical scenario.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    // Camera setup - responsive to window size
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    camera.position.set(0, 0, 80);
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/OBJLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/MTLLoader.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+    // Renderer setup - High performance
+    renderer = new THREE.WebGLRenderer({ 
+        canvas, 
+        antialias: true, 
+        alpha: true,
+        powerPreference: 'high-performance'
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+
+    // Lighting Setup - Realistic 3D rendering [web:17]
+    // Main key light (front)
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    keyLight.position.set(50, 50, 50);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    scene.add(keyLight);
+
+    // Fill light (side)
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    fillLight.position.set(-50, 30, 50);
+    scene.add(fillLight);
+
+    // Rim light (back)
+    const rimLight = new THREE.DirectionalLight(0x404040, 0.5);
+    rimLight.position.set(0, 20, -80);
+    scene.add(rimLight);
+
+    // Soft ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
+
+    // OrbitControls - Smooth camera interaction [web:17]
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; // Enable smooth damping
+    controls.dampingFactor = 0.05; // Ultra-smooth (lower = smoother)
+    controls.autoRotate = true; // Auto-rotate on load
+    controls.autoRotateSpeed = 2; // Rotation speed
+    controls.enableZoom = true;
+    controls.zoomSpeed = 1.2;
+    controls.enablePan = true;
+    controls.panSpeed = 0.8;
+    controls.minDistance = 30;
+    controls.maxDistance = 150;
+    
+    // Set camera to look at center
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    // Load single OBJ/MTL model
+    loadModel();
+
+    // Handle window resize
+    window.addEventListener('resize', onWindowResize, false);
+
+    // Stop auto-rotate on user interaction
+    renderer.domElement.addEventListener('mousedown', () => {
+        controls.autoRotate = false;
+    });
+
+    renderer.domElement.addEventListener('touchstart', () => {
+        controls.autoRotate = false;
+    });
+
+    // Resume auto-rotate after 5 seconds of inactivity
+    let autoRotateTimeout;
+    function resetAutoRotate() {
+        clearTimeout(autoRotateTimeout);
+        autoRotateTimeout = setTimeout(() => {
+            controls.autoRotate = true;
+        }, 5000);
+    }
+
+    renderer.domElement.addEventListener('mouseup', resetAutoRotate);
+    renderer.domElement.addEventListener('touchend', resetAutoRotate);
+
+    // Start animation loop
+    animate();
+}
+
+// Load single OBJ and MTL model [web:14][web:18]
+function loadModel() {
+    const mtlLoader = new THREE.MTLLoader();
+    const objLoader = new THREE.OBJLoader();
+
+    // Set path to models folder
+    const modelPath = 'models/';
+    
+    // Load MTL (materials)
+    mtlLoader.setPath(modelPath);
+    mtlLoader.load('source.mtl', (materials) => {
+        materials.preload();
+        
+        // Load OBJ with materials
+        objLoader.setMaterials(materials);
+        objLoader.setPath(modelPath);
+        objLoader.load('source.obj', (object) => {
+            model = object;
+            
+            // Setup model properties
+            setupModel(model);
+            
+            // Center and scale model
+            model.position.set(0, 0, 0);
+            model.scale.set(2, 2, 2); // Adjust scale as needed
+            
+            scene.add(model);
+
+            // Finish loading
+            finishLoading();
+        }, 
+        // Progress callback (optional)
+        (xhr) => {
+            const percentComplete = (xhr.loaded / xhr.total) * 100;
+            console.log(percentComplete + '% loaded');
+        },
+        // Error callback
+        (error) => {
+            console.error('Error loading model:', error);
+            finishLoading();
+        });
+    });
+}
+
+// Setup model properties and identify rotating cameras
+function setupModel(model) {
+    let cameraCount = 0;
+    
+    model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            
+            // Improve material rendering
+            if (child.material) {
+                child.material.side = THREE.DoubleSide;
+                child.material.metalness = 0.3;
+                child.material.roughness = 0.6;
+            }
+            
+            // Log mesh names to identify camera objects
+            if (child.name) {
+                console.log('Mesh found:', child.name);
+                cameraCount++;
+            }
+        }
+    });
+    
+    console.log('Total meshes in model:', cameraCount);
+}
+
+// Finish loading and hide spinner
+function finishLoading() {
+    isLoading = false;
+    const spinner = document.getElementById('loading-spinner');
+    if (spinner) {
+        spinner.style.opacity = '0';
+        spinner.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+            spinner.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Animation loop - Smooth rendering [web:17]
+function animate() {
+    requestAnimationFrame(animate);
+
+    // Update controls for smooth damping
+    controls.update();
+
+    // The cameras inside your OBJ are already rotating - no need to manually rotate
+    // If you need to apply additional rotation to the entire model:
+    if (model) {
+        // Uncomment the line below for subtle overall rotation:
+        // model.rotation.y += 0.0005;
+    }
+
+    // Render scene
+    renderer.render(scene, camera);
+}
+
+// Handle window resize - Responsive design
+function onWindowResize() {
+    const container = document.getElementById('canvas-container');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+}
+
+// Initialize on page load
+window.addEventListener('DOMContentLoaded', init);
