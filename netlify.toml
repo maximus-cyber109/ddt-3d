@@ -1,5 +1,5 @@
 [build]
-  command = "echo 'No build required'"
+  command = "echo 'Static site - no build needed'"
   publish = "/"
 
 [[redirects]]
@@ -8,11 +8,7 @@
   status = 200
 
 [[headers]]
-  for = "/*.{js,css,jpg,jpeg,png,gif,svg}"
+  for = "/*.{js,css,jpg,jpeg,png,gif,svg,obj,mtl}"
   [headers.values]
     Cache-Control = "public, max-age=31536000"
-
-[[headers]]
-  for = "/models/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000"
+    Access-Control-Allow-Origin = "*"
