@@ -99,23 +99,37 @@
         <p style="margin-top: 2rem; opacity: 0.8; font-size: 0.95rem;">Bulk prices available | Buy 2 for ₹18,999 each | Free delivery across India</p>
     </section>
 
-        <!-- Scripts Section -->
-    <!-- 1. Three.js Core -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
-    <!-- 2. Three.js Examples (ALL in one) -->
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/OBJLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/MTLLoader.js"></script>
-    
-    <!-- 3. GSAP (optional, for animations) -->
+          <!-- Three.js and loaders from esm.sh (more reliable) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://esm.sh/three@r128",
+        "three/addons/": "https://esm.sh/three@r128/examples/jsm/"
+      }
+    }
+    </script>
+
+    <script type="module">
+      import * as THREE from 'three';
+      import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+      import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+
+      // Make available globally
+      window.THREE = THREE;
+      window.MTLLoader = MTLLoader;
+      window.OBJLoader = OBJLoader;
+
+      // Start the app
+      import('./script.js').then(() => {
+        console.log('✓ All modules loaded successfully');
+      });
+    </script>
+
+    <!-- Other libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    
-    <!-- 4. Lenis (optional, for smooth scroll) -->
     <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
     
-    <!-- 5. Your custom script (LAST) -->
     <script src="script.js"></script>
 </body>
 </html>
