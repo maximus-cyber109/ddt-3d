@@ -37,7 +37,8 @@ camera.position.set(0, 0, 5);
 
 const renderer = new THREE.WebGLRenderer({ 
     alpha: true, 
-    antialias: true 
+    antialias: true,
+    preserveDrawingBuffer: true 
 });
 renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -61,25 +62,58 @@ const rimLight = new THREE.DirectionalLight(0xffffff, 0.6);
 rimLight.position.set(0, -8, 5);
 scene.add(rimLight);
 
-// Controls - VERTICAL ROTATION + EASIER MOBILE
+// Custom Controls - VERTICAL ONLY
+class VerticalOrbitControls extends OrbitControls {
+    constructor(camera, domElement) {
+        super(camera, domElement);
+        this.isVerticalOnly = true;
+    }
+
+    update() {
+        // Lock horizontal (azimuth) rotation
+        this.setAzimuthalAngle(0);
+        
+        // Constrain vertical (polar) to 90 degrees
+        if (this.getPolarAngle() !== Math.PI / 2) {
+            this.setPolarAngle(Math.PI / 2);
+        }
+        
+        return super.update();
+    }
+}
+
+// Custom controls - Simpler approach
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.12;  // Increased for easier mobile control
+controls.dampingFactor = 0.12;
 controls.autoRotate = true;
-controls.autoRotateSpeed = 3;   // Faster auto-rotation
+controls.autoRotateSpeed = 3;
 controls.enableZoom = false;
 controls.enablePan = false;
 controls.enableRotate = true;
+controls.autoRotateSpeed = 2;
 
-// VERTICAL ROTATION ONLY - constrain to Y axis
-controls.addEventListener('change', () => {
-    // Keep X rotation minimal (slight tilt)
-    if (Math.abs(controls.getPolarAngle() - Math.PI / 2) > 0.3) {
-        controls.setPolarAngle(Math.PI / 2);
+// Constrain rotation to Y axis ONLY (vertical head-to-toe)
+let currentYRotation = 0;
+
+renderer.domElement.addEventListener('mousedown', () => {
+    currentYRotation = camera.position.x;
+});
+
+renderer.domElement.addEventListener('mousemove', (e) => {
+    if (controls.isUserInteracting) {
+        // Get change in mouse position
+        const deltaMove = e.clientX - (renderer.domElement.offsetLeft + renderer.domElement.clientWidth / 2);
+        
+        // Apply only Y-axis rotation
+        currentYRotation = (deltaMove / 200);
+        camera.position.x = Math.sin(currentYRotation) * 5;
+        camera.position.z = Math.cos(currentYRotation) * 5;
+        camera.lookAt(0, 0, 0);
     }
 });
 
-// Load Model - LARGER SCALE
+// Load Model
 const loader = new GLTFLoader(loadingManager);
 let model;
 
@@ -95,10 +129,9 @@ loader.load(
         model.position.sub(center);
         
         const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 4.5 / maxDim;  // LARGER (was 3)
+        const scale = 4.5 / maxDim;
         model.scale.setScalar(scale);
         
-        // Vertical orientation
         model.rotation.x = 0;
         model.rotation.z = 0;
         model.rotation.y = 0;
@@ -125,43 +158,56 @@ function animate() {
     if (controls.isUserInteracting) {
         isInteracting = true;
         controls.autoRotate = false;
+    } else if (isInteracting) {
+        isInteracting = false;
     }
     
-    controls.update();
+    // Auto-rotate around Y axis (vertical)
+    if (controls.autoRotate && !controls.isUserInteracting) {
+        currentYRotation += controls.autoRotateSpeed * 0.01;
+        camera.position.x = Math.sin(currentYRotation) * 5;
+        camera.position.z = Math.cos(currentYRotation) * 5;
+    }
+    
+    camera.lookAt(0, 0, 0);
     renderer.render(scene, camera);
 }
 animate();
 
-// Resume auto-rotate with BETTER detection
+// Resume auto-rotate
 let interactionTimeout;
-
-renderer.domElement.addEventListener('mousedown', () => {
-    isInteracting = true;
-});
 
 renderer.domElement.addEventListener('mouseup', () => {
     clearTimeout(interactionTimeout);
     interactionTimeout = setTimeout(() => {
-        isInteracting = false;
         controls.autoRotate = true;
     }, 2000);
-});
-
-renderer.domElement.addEventListener('touchstart', () => {
-    isInteracting = true;
 });
 
 renderer.domElement.addEventListener('touchend', () => {
     clearTimeout(interactionTimeout);
     interactionTimeout = setTimeout(() => {
-        isInteracting = false;
         controls.autoRotate = true;
     }, 2000);
 });
 
-// Disable auto-rotate on gesture (pinch, etc)
-renderer.domElement.addEventListener('gesturestart', () => {
+// Touch controls for mobile
+let touchStartX = 0;
+let touchCurrentX = 0;
+
+renderer.domElement.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
     controls.autoRotate = false;
+});
+
+renderer.domElement.addEventListener('touchmove', (e) => {
+    touchCurrentX = e.touches[0].clientX;
+    const delta = (touchCurrentX - touchStartX) / 50;
+    currentYRotation += delta * 0.05;
+    camera.position.x = Math.sin(currentYRotation) * 5;
+    camera.position.z = Math.cos(currentYRotation) * 5;
+    camera.lookAt(0, 0, 0);
+    touchStartX = touchCurrentX;
 });
 
 // Copy Coupon
@@ -194,4 +240,4 @@ window.addEventListener('resize', () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
 });
 
-console.log('✓ Script ready');
+console.log('✓ Vertical rotation enabled');
