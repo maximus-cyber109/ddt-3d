@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const loadingScreen = document.getElementById('loading-screen');
@@ -20,7 +19,7 @@ loadingManager.onProgress = (url, loaded, total) => {
 
 loadingManager.onError = (url) => {
     console.error('Error loading:', url);
-    loadingScreen.innerHTML = '<p>Error: Check if models exist</p>';
+    loadingScreen.innerHTML = '<p>Error: Check if camera.glb exists in models/ folder</p>';
 };
 
 // Three.js Scene
@@ -43,6 +42,7 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.3;
+renderer.outputEncoding = THREE.sRGBEncoding;
 container.appendChild(renderer.domElement);
 
 // Lighting
@@ -70,38 +70,50 @@ controls.autoRotateSpeed = 1.5;
 controls.enableZoom = false;
 controls.enablePan = false;
 
-// Load Model - OBJ/MTL
-const mtlLoader = new MTLLoader(loadingManager);
-const objLoader = new OBJLoader(loadingManager);
+// Load Model - GLB Format
+const loader = new GLTFLoader(loadingManager);
 let model;
 
-mtlLoader.setPath('models/');
-mtlLoader.load('source.mtl', (materials) => {
-    materials.preload();
-    objLoader.setMaterials(materials);
-    objLoader.setPath('models/');
-    objLoader.load('source.obj', (obj) => {
-        model = obj;
+loader.load(
+    './models/camera.glb',
+    (gltf) => {
+        model = gltf.scene;
         
+        // Calculate bounds and center
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         
+        // Center the model
         model.position.sub(center);
         
+        // Scale to reasonable size
         const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 3 / maxDim;
+        const targetSize = 3;
+        const scale = targetSize / maxDim;
         model.scale.setScalar(scale);
         
+        // Tilt for dynamic look
         model.rotation.x = Math.PI / 10;
         model.rotation.z = -Math.PI / 20;
         
         scene.add(model);
-        console.log('✓ Model loaded');
+        console.log('✓ Model loaded and scaled');
+        console.log('Model dimensions:', size);
+        console.log('Scale factor:', scale);
         
         initScrollAnimations();
-    });
-});
+    },
+    (progress) => {
+        if (progress.total > 0) {
+            console.log(`Model: ${Math.round((progress.loaded / progress.total) * 100)}%`);
+        }
+    },
+    (error) => {
+        console.error('Model error:', error);
+        loadingScreen.innerHTML = '<p>Model failed to load. Ensure camera.glb is in models/ folder</p>';
+    }
+);
 
 // Animation Loop
 function animate() {
@@ -141,6 +153,7 @@ function initScrollAnimations() {
     
     sections.forEach((section) => {
         const position = section.getAttribute('data-position');
+        
         const isMobile = window.innerWidth < 968;
         const targetX = isMobile ? 0 : (position === 'left' ? -25 : 25);
         const rotationY = position === 'left' ? Math.PI / 4 : -Math.PI / 4;
@@ -168,6 +181,7 @@ function initScrollAnimations() {
         });
     });
     
+    // CTA: Return to center
     ScrollTrigger.create({
         trigger: '.cta-section',
         start: 'top center',
