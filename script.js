@@ -1,42 +1,22 @@
-// Wait for all Three.js libraries to load
-function initScene() {
-    // Verify all libraries are loaded
-    if (typeof THREE === 'undefined') {
-        console.error('THREE.js not loaded');
-        return setTimeout(initScene, 100);
-    }
-    if (typeof THREE.OrbitControls === 'undefined') {
-        console.error('OrbitControls not loaded');
-        return setTimeout(initScene, 100);
-    }
+// Wait for window load to ensure all resources are loaded
+window.addEventListener('load', function() {
+    console.log('✓ Page fully loaded, starting 3D scene...');
+    init3DScene();
+});
 
-    console.log('✓ All libraries loaded');
-    createScene();
-}
-
-function createScene() {
+function init3DScene() {
     const loadingScreen = document.getElementById('loading-screen');
-
-    // Loading Manager
-    const loadingManager = new THREE.LoadingManager();
-    loadingManager.onLoad = () => {
-        setTimeout(() => {
-            loadingScreen.classList.add('hidden');
-        }, 500);
-    };
-
-    loadingManager.onProgress = (url, loaded, total) => {
-        console.log(`Loading: ${Math.round((loaded / total) * 100)}%`);
-    };
-
-    loadingManager.onError = (url) => {
-        console.error('Error loading:', url);
-        loadingScreen.innerHTML = '<div class="loader"></div><p>Error: Model failed to load</p>';
-    };
-
-    // Three.js Scene
     const container = document.getElementById('canvas-container');
+
+    if (!container) {
+        console.error('Canvas container not found');
+        return;
+    }
+
+    // Three.js Scene Setup
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+
     const camera = new THREE.PerspectiveCamera(
         45,
         container.clientWidth / container.clientHeight,
@@ -52,7 +32,7 @@ function createScene() {
     renderer.toneMappingExposure = 1.3;
     container.appendChild(renderer.domElement);
 
-    // Lighting - Premium Setup
+    // Lighting Setup
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     scene.add(ambientLight);
 
@@ -68,19 +48,27 @@ function createScene() {
     rimLight.position.set(0, -5, 3);
     scene.add(rimLight);
 
-    // Controls
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.5;
-    controls.enableZoom = false;
-    controls.enablePan = false;
+    // Simple Auto-Rotate (No OrbitControls needed)
+    let model;
+    let autoRotateSpeed = 0.015;
+
+    // Loading Manager
+    const loadingManager = new THREE.LoadingManager();
+    loadingManager.onLoad = () => {
+        setTimeout(() => {
+            loadingScreen.classList.add('hidden');
+            console.log('✓ Model loaded successfully');
+        }, 500);
+    };
+
+    loadingManager.onError = (url) => {
+        console.error('Error loading:', url);
+        loadingScreen.innerHTML = '<div class="loader"></div><p>Error loading model</p>';
+    };
 
     // Load OBJ/MTL Model
     const mtlLoader = new THREE.MTLLoader(loadingManager);
     const objLoader = new THREE.OBJLoader(loadingManager);
-    let model;
 
     mtlLoader.setPath('models/');
     mtlLoader.load('source.mtl', (materials) => {
@@ -90,62 +78,84 @@ function createScene() {
         objLoader.setPath('models/');
         objLoader.load('source.obj', (object) => {
             model = object;
-            
+
             // Calculate bounds and center
             const box = new THREE.Box3().setFromObject(model);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
-            
-            // Center the model
+
             model.position.sub(center);
-            
-            // Scale to reasonable size
+
+            // Scale model
             const maxDim = Math.max(size.x, size.y, size.z);
-            const targetSize = 3;
-            const scale = targetSize / maxDim;
+            const scale = 3 / maxDim;
             model.scale.setScalar(scale);
-            
-            // Tilt for dynamic look
+
+            // Initial tilt
             model.rotation.x = Math.PI / 10;
             model.rotation.z = -Math.PI / 20;
-            
+
             scene.add(model);
-            console.log('✓ Model loaded and scaled');
-            
-            initScrollAnimations(scene, model, container, controls);
+            console.log('✓ Model added to scene');
         }, 
         undefined,
         (error) => {
-            console.error('Model error:', error);
-            loadingScreen.innerHTML = '<div class="loader"></div><p>Error loading model</p>';
+            console.error('OBJ loading error:', error);
         });
     }, undefined, (error) => {
-        console.error('MTL error:', error);
+        console.error('MTL loading error:', error);
     });
 
-    // Animation Loop
+    // Animation Loop - Simple auto-rotate
     function animate() {
         requestAnimationFrame(animate);
-        controls.update();
+
+        if (model) {
+            model.rotation.y += autoRotateSpeed;
+        }
+
         renderer.render(scene, camera);
     }
 
     animate();
 
-    // Resize Handler
+    // Mouse interaction - pause rotation on hover
+    container.addEventListener('mouseenter', () => {
+        autoRotateSpeed = 0;
+    });
+
+    container.addEventListener('mouseleave', () => {
+        autoRotateSpeed = 0.015;
+    });
+
+    // Touch interaction
+    container.addEventListener('touchstart', () => {
+        autoRotateSpeed = 0;
+    });
+
+    container.addEventListener('touchend', () => {
+        autoRotateSpeed = 0.015;
+    });
+
+    // Resize handler
     window.addEventListener('resize', () => {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
-        ScrollTrigger.refresh();
     });
+
+    // Initialize Lenis smooth scroll
+    initLenisScroll(model, container);
+
+    // Initialize coupon copy
+    initCoupon();
 }
 
-// Lenis Smooth Scroll
-function initLenis() {
+// Lenis Smooth Scroll Setup
+function initLenisScroll(model, container) {
     if (typeof Lenis === 'undefined') {
-        console.error('Lenis not loaded');
-        return setTimeout(initLenis, 100);
+        console.warn('Lenis not available, skipping smooth scroll');
+        return;
     }
 
     const lenis = new Lenis({
@@ -161,82 +171,45 @@ function initLenis() {
 
     requestAnimationFrame(raf);
 
-    gsap.registerPlugin(ScrollTrigger);
-    lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add((time) => lenis.raf(time * 1000));
-    gsap.ticker.lagSmoothing(0);
+    // GSAP + ScrollTrigger animations
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => lenis.raf(time * 1000));
+        gsap.ticker.lagSmoothing(0);
 
-    console.log('✓ Lenis ready');
-}
+        const sections = document.querySelectorAll('.content-section');
+        sections.forEach((section) => {
+            const position = section.getAttribute('data-position');
+            const targetX = position === 'left' ? -25 : 25;
 
-// Scroll Animations
-function initScrollAnimations(scene, model, container, controls) {
-    if (typeof gsap === 'undefined' || typeof Lenis === 'undefined') {
-        console.warn('GSAP or Lenis not ready, retrying...');
-        return setTimeout(() => initScrollAnimations(scene, model, container, controls), 100);
-    }
-
-    const sections = gsap.utils.toArray('.content-section');
-    
-    sections.forEach((section) => {
-        const position = section.getAttribute('data-position');
-        const isMobile = window.innerWidth < 968;
-        const targetX = isMobile ? 0 : (position === 'left' ? -25 : 25);
-        const rotationY = position === 'left' ? Math.PI / 4 : -Math.PI / 4;
-
-        ScrollTrigger.create({
-            trigger: section,
-            start: 'top center',
-            end: 'bottom center',
-            scrub: 1,
-            onUpdate: (self) => {
-                const progress = self.progress;
-                
-                gsap.to(container, {
-                    x: `${targetX * progress}vw`,
-                    duration: 0.3,
-                });
-                
-                if (model) {
-                    gsap.to(model.rotation, {
-                        y: rotationY * progress,
+            ScrollTrigger.create({
+                trigger: section,
+                start: 'top center',
+                end: 'bottom center',
+                scrub: 1,
+                onUpdate: (self) => {
+                    const progress = self.progress;
+                    gsap.to(container, {
+                        x: `${targetX * progress}vw`,
                         duration: 0.3,
                     });
+                    
+                    if (model) {
+                        gsap.to(model.rotation, {
+                            y: (position === 'left' ? Math.PI / 4 : -Math.PI / 4) * progress,
+                            duration: 0.3,
+                        });
+                    }
                 }
-            }
-        });
-    });
-
-    // CTA: Return to center
-    ScrollTrigger.create({
-        trigger: '.cta-section',
-        start: 'top center',
-        end: 'center center',
-        scrub: 1,
-        onUpdate: (self) => {
-            const progress = self.progress;
-            
-            gsap.to(container, {
-                x: 0,
-                scale: 1.1,
-                duration: 0.5,
             });
-            
-            if (model) {
-                gsap.to(model.rotation, {
-                    y: Math.PI * 2 * progress,
-                    duration: 0.5,
-                });
-            }
-            
-            controls.autoRotate = true;
-        }
-    });
+        });
 
-    console.log('✓ Scroll animations initialized');
+        console.log('✓ Lenis smooth scroll initialized');
+    }
 }
 
-// Copy Coupon
+// Coupon Copy Handler
 function initCoupon() {
     const copyBtn = document.getElementById('copyBtn');
     const couponCode = document.getElementById('couponCode');
@@ -247,7 +220,9 @@ function initCoupon() {
             navigator.clipboard.writeText(code).then(() => {
                 copyBtn.classList.add('copied');
                 setTimeout(() => copyBtn.classList.remove('copied'), 2500);
+                console.log('✓ Coupon copied');
             }).catch(() => {
+                console.log('Fallback copy method');
                 const textArea = document.createElement('textarea');
                 textArea.value = code;
                 document.body.appendChild(textArea);
@@ -259,19 +234,4 @@ function initCoupon() {
             });
         });
     }
-}
-
-// Master init function
-function masterInit() {
-    console.log('Starting initialization...');
-    initCoupon();
-    initLenis();
-    initScene();
-}
-
-// Wait for DOM ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', masterInit);
-} else {
-    masterInit();
 }
