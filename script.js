@@ -33,7 +33,7 @@ const camera = new THREE.PerspectiveCamera(
     0.1,
     1000
 );
-camera.position.set(0, 0, 6);
+camera.position.set(0, 0, 5);
 
 const renderer = new THREE.WebGLRenderer({ 
     alpha: true, 
@@ -45,33 +45,41 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.3;
 container.appendChild(renderer.domElement);
 
-// Lighting - Premium
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+// Premium Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
-keyLight.position.set(8, 6, 8);
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+keyLight.position.set(8, 8, 8);
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
-fillLight.position.set(-8, 3, -8);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.8);
+fillLight.position.set(-8, 4, -8);
 scene.add(fillLight);
 
-const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
-rimLight.position.set(0, -8, 4);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.6);
+rimLight.position.set(0, -8, 5);
 scene.add(rimLight);
 
-// Controls - ROTATION ONLY (no zoom, no pan)
+// Controls - VERTICAL ROTATION + EASIER MOBILE
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.08;
+controls.dampingFactor = 0.12;  // Increased for easier mobile control
 controls.autoRotate = true;
-controls.autoRotateSpeed = 2;
-controls.enableZoom = false;    // NO ZOOM
-controls.enablePan = false;     // NO PAN
-controls.enableRotate = true;   // YES ROTATION
+controls.autoRotateSpeed = 3;   // Faster auto-rotation
+controls.enableZoom = false;
+controls.enablePan = false;
+controls.enableRotate = true;
 
-// Load Model
+// VERTICAL ROTATION ONLY - constrain to Y axis
+controls.addEventListener('change', () => {
+    // Keep X rotation minimal (slight tilt)
+    if (Math.abs(controls.getPolarAngle() - Math.PI / 2) > 0.3) {
+        controls.setPolarAngle(Math.PI / 2);
+    }
+});
+
+// Load Model - LARGER SCALE
 const loader = new GLTFLoader(loadingManager);
 let model;
 
@@ -87,11 +95,13 @@ loader.load(
         model.position.sub(center);
         
         const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 3 / maxDim;
+        const scale = 4.5 / maxDim;  // LARGER (was 3)
         model.scale.setScalar(scale);
         
-        model.rotation.x = Math.PI / 10;
-        model.rotation.z = -Math.PI / 20;
+        // Vertical orientation
+        model.rotation.x = 0;
+        model.rotation.z = 0;
+        model.rotation.y = 0;
         
         scene.add(model);
         console.log('✓ Model loaded');
@@ -107,10 +117,13 @@ loader.load(
 );
 
 // Animation Loop
+let isInteracting = false;
+
 function animate() {
     requestAnimationFrame(animate);
     
     if (controls.isUserInteracting) {
+        isInteracting = true;
         controls.autoRotate = false;
     }
     
@@ -119,13 +132,36 @@ function animate() {
 }
 animate();
 
-// Resume auto-rotate on mobile after touch
-let touchTimeout;
-document.addEventListener('touchend', () => {
-    clearTimeout(touchTimeout);
-    touchTimeout = setTimeout(() => {
+// Resume auto-rotate with BETTER detection
+let interactionTimeout;
+
+renderer.domElement.addEventListener('mousedown', () => {
+    isInteracting = true;
+});
+
+renderer.domElement.addEventListener('mouseup', () => {
+    clearTimeout(interactionTimeout);
+    interactionTimeout = setTimeout(() => {
+        isInteracting = false;
         controls.autoRotate = true;
     }, 2000);
+});
+
+renderer.domElement.addEventListener('touchstart', () => {
+    isInteracting = true;
+});
+
+renderer.domElement.addEventListener('touchend', () => {
+    clearTimeout(interactionTimeout);
+    interactionTimeout = setTimeout(() => {
+        isInteracting = false;
+        controls.autoRotate = true;
+    }, 2000);
+});
+
+// Disable auto-rotate on gesture (pinch, etc)
+renderer.domElement.addEventListener('gesturestart', () => {
+    controls.autoRotate = false;
 });
 
 // Copy Coupon
